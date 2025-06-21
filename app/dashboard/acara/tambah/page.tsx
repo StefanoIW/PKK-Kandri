@@ -124,7 +124,7 @@ Terima kasih. 🙏`
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phone: "6282115575219", // Nomor koordinator
+          phone: "6287878099411", // Nomor koordinator yang baru
           message,
           eventId: event.id,
           eventDate: event.date,
