@@ -5,8 +5,6 @@ import { id } from "date-fns/locale"
 
 export async function GET() {
   try {
-    console.log("=== Checking Reminders ===")
-
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ydqmhzcjcsrvxapaglfc.supabase.co",
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
@@ -15,7 +13,6 @@ export async function GET() {
 
     // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split("T")[0]
-    console.log("📅 Today's date:", today)
 
     // Get all unsent reminders for today
     const { data: reminders, error } = await supabase
@@ -25,23 +22,15 @@ export async function GET() {
       .eq("sent", false)
 
     if (error) {
-      console.log("❌ Database error:", error)
       throw error
     }
-
-    console.log("📋 Found reminders:", reminders?.length || 0)
 
     // Send reminders
     const results = []
     for (const reminder of reminders || []) {
       const event = reminder.events
 
-      if (!event) {
-        console.log("⚠️ No event found for reminder:", reminder.id)
-        continue
-      }
-
-      console.log("📤 Processing reminder for event:", event.title)
+      if (!event) continue
 
       const formattedDate = format(new Date(event.date), "EEEE, dd MMMM yyyy", { locale: id })
 
@@ -75,7 +64,6 @@ ${event.description}
 Terima kasih. 🙏`
 
       // Send WhatsApp message using Fonnte API
-      console.log("🚀 Sending reminder to:", reminder.phone)
       const response = await fetch("https://api.fonnte.com/send", {
         method: "POST",
         headers: {
@@ -89,35 +77,20 @@ Terima kasih. 🙏`
       })
 
       const result = await response.json()
-      console.log("📱 Fonnte response:", result)
 
-      // Mark reminder as sent regardless of success/failure to avoid spam
+      // Mark reminder as sent
       await supabase.from("reminders").update({ sent: true }).eq("id", reminder.id)
 
       results.push({
         reminder_id: reminder.id,
         event_id: event.id,
-        phone: reminder.phone,
-        success: response.ok,
         result,
       })
     }
 
-    console.log("✅ Reminder check completed. Sent:", results.length)
-    return NextResponse.json({
-      success: true,
-      sent_reminders: results.length,
-      results,
-      date: today,
-    })
+    return NextResponse.json({ success: true, sent_reminders: results.length, results })
   } catch (error) {
-    console.error("💥 Error checking reminders:", error)
-    return NextResponse.json(
-      {
-        error: "Failed to check reminders",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    )
+    console.error("Error checking reminders:", error)
+    return NextResponse.json({ error: "Failed to check reminders" }, { status: 500 })
   }
 }
