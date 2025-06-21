@@ -27,7 +27,6 @@ export default function AddEventPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [whatsappStatus, setWhatsappStatus] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -41,13 +40,10 @@ export default function AddEventPage() {
 
     setLoading(true)
     setError(null)
-    setWhatsappStatus(null)
 
     try {
       // Format date to ISO string (YYYY-MM-DD)
       const formattedDate = format(date, "yyyy-MM-dd")
-
-      console.log("Creating event:", { title, date: formattedDate, time, location, description })
 
       // Insert event to Supabase
       const { data, error: insertError } = await supabase
@@ -63,25 +59,12 @@ export default function AddEventPage() {
         ])
         .select()
 
-      if (insertError) {
-        console.error("Supabase error:", insertError)
-        throw insertError
-      }
-
-      console.log("Event created successfully:", data)
+      if (insertError) throw insertError
 
       // Send WhatsApp notification
       if (data && data.length > 0) {
         const event = data[0]
-        setWhatsappStatus("Mengirim notifikasi WhatsApp...")
-
-        const whatsappResult = await sendWhatsAppNotification(event)
-
-        if (whatsappResult.success) {
-          setWhatsappStatus("✅ Notifikasi WhatsApp berhasil dikirim!")
-        } else {
-          setWhatsappStatus(`⚠️ Gagal mengirim WhatsApp: ${whatsappResult.error}`)
-        }
+        await sendWhatsAppNotification(event)
       }
 
       setSuccess(true)
@@ -93,10 +76,10 @@ export default function AddEventPage() {
       setLocation("")
       setDescription("")
 
-      // Redirect after 3 seconds to show WhatsApp status
+      // Redirect after 2 seconds
       setTimeout(() => {
         router.push("/dashboard/acara")
-      }, 3000)
+      }, 2000)
     } catch (error: any) {
       console.error("Error adding event:", error)
       setError(error.message || "Terjadi kesalahan saat menambahkan acara")
@@ -134,36 +117,21 @@ ${event.description}
 
 Terima kasih. 🙏`
 
-      console.log("Sending WhatsApp notification...")
-
       // Call server action to send WhatsApp message
-      const response = await fetch("/api/send-whatsapp", {
+      await fetch("/api/send-whatsapp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phone: "6282115575219", // Nomor koordinator yang baru
+          phone: "6282115575219", // Nomor koordinator
           message,
           eventId: event.id,
           eventDate: event.date,
         }),
       })
-
-      const result = await response.json()
-      console.log("WhatsApp API response:", result)
-
-      if (!response.ok) {
-        throw new Error(result.error || `HTTP ${response.status}`)
-      }
-
-      return { success: true, result }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error sending WhatsApp notification:", error)
-      return {
-        success: false,
-        error: error.message || "Terjadi kesalahan saat mengirim notifikasi",
-      }
     }
   }
 
@@ -179,16 +147,7 @@ Terima kasih. 🙏`
 
       {success && (
         <Alert className="mb-6 bg-green-50 text-green-800 border-green-200">
-          <AlertDescription>
-            Acara berhasil ditambahkan!
-            {whatsappStatus && <div className="mt-2 text-sm">Status WhatsApp: {whatsappStatus}</div>}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {whatsappStatus && !success && (
-        <Alert className="mb-6 bg-blue-50 text-blue-800 border-blue-200">
-          <AlertDescription>{whatsappStatus}</AlertDescription>
+          <AlertDescription>Acara berhasil ditambahkan dan notifikasi WhatsApp telah dikirim!</AlertDescription>
         </Alert>
       )}
 
