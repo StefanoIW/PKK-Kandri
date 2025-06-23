@@ -67,7 +67,7 @@ Terima kasih. 🙏`
       const response = await fetch("https://api.fonnte.com/send", {
         method: "POST",
         headers: {
-          Authorization: "KChLR9EBA65W2eaqkwBV",
+          Authorization: "pUHPiTDPi4aeGQo9Q4PW",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
