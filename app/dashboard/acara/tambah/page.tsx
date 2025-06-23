@@ -111,10 +111,6 @@ ${event.description}
 • Bawa perlengkapan sesuai kebutuhan acara
 • Konfirmasi kehadiran kepada koordinator RT masing-masing
 
-📲 Untuk informasi lebih lanjut, silakan hubungi koordinator acara.
-
-👥 *Bersama Kita Wujudkan PKK Kandri yang Maju dan Sejahtera!* 👥
-
 Terima kasih. 🙏`
 
       // Call server action to send WhatsApp message
